@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:geo_attendance_system_hr/models/employee.dart';
@@ -245,6 +246,10 @@ class _AddUSerState extends State<AddUser> {
                   ),
                 ),
 
+                Container(padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                child: _errorMessage!=null ? (Text(_errorMessage)): Container(),
+                ),
+
                 Container(
                   padding: const EdgeInsets.fromLTRB(0, 20, 0, 20),
                   child: Center(
@@ -260,15 +265,18 @@ class _AddUSerState extends State<AddUser> {
   }
 
   void validateEmployee(){
+
+    //_formKey.currentState.reset();
+
     if(_formKey.currentState.validate()){
       
-      if(dropdownValueManager == null)
+      if(this.manager == null)
       {
         _errorMessage = "Please select a manager value";
         return;
       }
 
-      if(dropdownValueOffice == null)
+      if(this.allotted_office == null)
       {
         _errorMessage = "Please select an office value";
         return;
@@ -282,10 +290,27 @@ class _AddUSerState extends State<AddUser> {
 
   void createUser() async {
     Employee employee = Employee(this.UID, this.Name, this.UUID, this.PhoneNumber, this.Address, this.allotted_office, this.manager);
-    authObject.signUp(this.email, this.password).then((var value){
+
+    try{
+      print("in try");
+    authObject.signUp(this.email, this.password).then((Map<int, String> value){
       
-      _userRef.child(value).set(employee.toJson());
+      if(value[0] == 0){
+      _userRef.child(value[1]).set(employee.toJson());
       _employeeIDRef.child(this.UID.toString()).set(this.email);
+      }
+      else
+      {
+        setState(() {
+          _errorMessage = value[1];
+        });
+        
+      }
     });
+    }
+    catch(e){
+      print("in catch");
+      print(e.message);
+    }
   }
 }
